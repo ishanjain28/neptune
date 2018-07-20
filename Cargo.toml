@@ -1,0 +1,6 @@
+[package]
+name = "os_boot"
+version = "0.1.0"
+authors = ["ishanjain28 <ishanjain28@gmail.com>"]
+
+[dependencies]
