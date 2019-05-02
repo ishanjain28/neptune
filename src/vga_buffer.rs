@@ -1,6 +1,6 @@
 use core::fmt;
-use volatile::Volatile;
 use spin::Mutex;
+use volatile::Volatile;
 
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -26,6 +26,7 @@ pub enum Color {
 
 // represents a color by combining foreground and background
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[repr(transparent)]
 pub struct ColorCode(u8);
 
 impl ColorCode {
@@ -49,6 +50,7 @@ const BUFFER_HEIGHT: usize = 25;
 const BUFFER_WIDTH: usize = 80;
 
 // This represents the vga buffer of size 25 * 80.
+#[repr(transparent)]
 pub struct Buffer {
     chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
@@ -62,7 +64,7 @@ pub struct Writer {
 lazy_static! {
     pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
         column_position: 0,
-        color_code: ColorCode::new(Color::Yellow, Color::Black),
+        color_code: ColorCode::new(Color::Green, Color::Black),
         buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
     });
 }
@@ -102,7 +104,7 @@ impl Writer {
 
     fn new_line(&mut self) {
         for row in 1..BUFFER_HEIGHT {
-            for col in 1..BUFFER_WIDTH {
+            for col in 0..BUFFER_WIDTH {
                 let character = self.buffer.chars[row][col].read();
                 self.buffer.chars[row - 1][col].write(character);
             }
@@ -130,4 +132,22 @@ impl fmt::Write for Writer {
 
         Ok(())
     }
+}
+
+// println implementation to write to vga buffer
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => ($crate::vga_buffer::_print(format_args!($($arg)*)));
+}
+
+#[macro_export]
+macro_rules! println {
+    () => ($crate::print!("\n"));
+    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+}
+
+#[doc(hidden)]
+pub fn _print(args: fmt::Arguments) {
+    use core::fmt::Write;
+    WRITER.lock().write_fmt(args).unwrap();
 }
