@@ -1,7 +1,8 @@
 [package]
-name = "os_boot"
+name = "neptune"
 version = "0.1.0"
 authors = ["ishanjain28 <ishanjain28@gmail.com>"]
+edition = "2018"
 
 [dependencies]
 volatile = "0.2.3"
@@ -13,3 +14,9 @@ features = ["spin_no_std"]
 
 [package.metadata.bootimage]
 default-target = "x86_64-os.json"
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"

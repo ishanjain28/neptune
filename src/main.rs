@@ -1,9 +1,8 @@
-#![feature(panic_implementation)] // required to define panic handler
 #![no_std] // don't include rust std lib
 #![no_main] // disable all rust entry point
 
-extern crate volatile;
 extern crate spin;
+extern crate volatile;
 
 #[macro_use]
 extern crate lazy_static;
@@ -15,7 +14,7 @@ use core::panic::PanicInfo;
 use vga_buffer::{Buffer, Color, ColorCode, Writer};
 
 /// This function is called on panic.
-#[panic_implementation]
+#[panic_handler]
 #[no_mangle]
 pub fn panic(_info: &PanicInfo) -> ! {
     loop {}
@@ -25,8 +24,13 @@ pub fn panic(_info: &PanicInfo) -> ! {
 pub extern "C" fn _start() -> ! {
     use core::fmt::Write;
     vga_buffer::WRITER.lock().write_str("Hello again").unwrap();
-    write!(vga_buffer::WRITER.lock(), ", some numbers: {} {}", 42, 1.337).unwrap();
+    write!(
+        vga_buffer::WRITER.lock(),
+        ", some numbers: {} {}",
+        42,
+        1.337
+    )
+    .unwrap();
 
     loop {}
 }
-
